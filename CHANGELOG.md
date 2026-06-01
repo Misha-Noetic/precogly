@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/precogly/precogly/compare/v0.2.0...v0.3.0) (2026-06-01)
+
+
+### Features
+
+* add due date, external ticket URL, and comment log to countermeasures; implement risk register with auto-populate and kanban view ([d055ad2](https://github.com/precogly/precogly/commit/d055ad20ab887aa6976b40ee4ba28646079ee0b1))
+* add due date, external ticket URL, and comment log to countermeasures; implement risk register with auto-populate and kanban view ([cb5c150](https://github.com/precogly/precogly/commit/cb5c1500f2bea81a9d5e08f9ff8e9378057b78b5))
+
 ## [0.2.0](https://github.com/precogly/precogly/compare/v0.1.0...v0.2.0) (2026-05-26)
 
 ### Features
