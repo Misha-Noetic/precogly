@@ -37,7 +37,9 @@ For a node inside a zone/scope set `parentId` to the container's id and `extent:
 ## Worked example
 
 See [`superpowers/specs/sample-dfd-canvas.json`](superpowers/specs/sample-dfd-canvas.json)
-for a complete, valid example.
+for a complete, valid example. You can also generate a real one from any diagram: open it in
+the DFD editor and click **Export** — the downloaded JSON is clean and re-importable, and makes
+an ideal few-shot example to hand to the model.
 
 ## How import works
 
