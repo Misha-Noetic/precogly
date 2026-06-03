@@ -14,6 +14,17 @@ import {
 import '@xyflow/react/dist/style.css'
 import { ArrowLeft, Save, Clock, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { DeleteDFDDialog } from '@/features/threat-models/components'
 import {
   Tooltip,
@@ -35,7 +46,7 @@ import { useParentRelationships } from './hooks/useParentRelationships'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useConnectionMode } from './hooks/useConnectionMode'
 import { useBoundaryMode } from './hooks/useBoundaryMode'
-import type { DiagramNode, DiagramEdge, DataFlowEdge, TrustBoundaryEdge } from './types'
+import type { DiagramNode, DiagramEdge, DataFlowEdge, TrustBoundaryEdge, CanvasData } from './types'
 
 function DFDEditorContent() {
   const { diagramId, id: threatModelId } = useParams<{ id: string; diagramId: string }>()
@@ -47,9 +58,10 @@ function DFDEditorContent() {
   const [selectedEdge, setSelectedEdge] = useState<DiagramEdge | null>(null)
   const [showTemplates, setShowTemplates] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [importConfirm, setImportConfirm] = useState<CanvasData | null>(null)
 
   // ReactFlow instance for coordinate conversion and edge queries
-  const { screenToFlowPosition, getEdges } = useReactFlow()
+  const { screenToFlowPosition, getEdges, fitView } = useReactFlow()
   const { x: viewportX, y: viewportY, zoom } = useViewport()
 
   // Delete DFD mutation
@@ -250,6 +262,39 @@ function DFDEditorContent() {
       setShowTemplates(false)
     },
     [setNodes, setEdges]
+  )
+
+  // Replace the canvas with an imported one, frame it, and inform the user.
+  const applyImportedCanvas = useCallback(
+    (canvas: CanvasData) => {
+      setNodes(canvas.nodes)
+      setEdges(canvas.edges)
+      setSelectedNode(null)
+      setSelectedEdge(null)
+      // Frame the imported diagram after React Flow has the new nodes.
+      setTimeout(() => fitView({ padding: 0.2 }), 0)
+      toast.success(
+        `Imported ${canvas.nodes.length} nodes and ${canvas.edges.length} connections — review and Save to generate threats.`
+      )
+      if (diagram && diagram.isPrimary === false) {
+        toast.warning(
+          'This is a Reference DFD; threats are generated only from the primary DFD.'
+        )
+      }
+    },
+    [setNodes, setEdges, fitView, diagram]
+  )
+
+  // Confirm before replacing a non-empty canvas; otherwise apply directly.
+  const handleImportDiagram = useCallback(
+    (canvas: CanvasData) => {
+      if (nodes.length > 0) {
+        setImportConfirm(canvas)
+      } else {
+        applyImportedCanvas(canvas)
+      }
+    },
+    [nodes.length, applyImportedCanvas]
   )
 
   // Keep selectedNode/selectedEdge in sync with actual node/edge data
@@ -456,6 +501,7 @@ function DFDEditorContent() {
           }
           navigate(`/threat-models/${threatModelId}`)
         }}
+        onImportDiagram={handleImportDiagram}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -544,6 +590,35 @@ function DFDEditorContent() {
         onConfirm={handleConfirmDelete}
         isDeleting={deleteDFDMutation.isPending}
       />
+
+      {/* Import replace confirmation */}
+      <AlertDialog
+        open={importConfirm !== null}
+        onOpenChange={(open) => { if (!open) setImportConfirm(null) }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace current diagram?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Importing replaces this diagram&rsquo;s {nodes.length} node
+              {nodes.length === 1 ? '' : 's'} and {edges.length} connection
+              {edges.length === 1 ? '' : 's'} with the imported canvas. You can undo with
+              Ctrl/Cmd+Z, and nothing is persisted until you Save.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (importConfirm) applyImportedCanvas(importConfirm)
+                setImportConfirm(null)
+              }}
+            >
+              Replace
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

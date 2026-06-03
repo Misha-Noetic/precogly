@@ -1,6 +1,6 @@
-import { memo } from 'react'
+import { memo, useRef } from 'react'
 import { useReactFlow } from '@xyflow/react'
-import { User, Server, Cog, Database, Shield, Box, ArrowRight, LayoutTemplate, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { User, Server, Cog, Database, Shield, Box, ArrowRight, LayoutTemplate, ShieldAlert, ShieldCheck, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -10,7 +10,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import type { DiagramNodeType } from '../types'
+import { toast } from 'sonner'
+import { parseAndValidateCanvas } from '../lib/importCanvas'
+import type { DiagramNodeType, CanvasData } from '../types'
 
 interface DiagramToolbarProps {
   connectionMode: boolean
@@ -19,6 +21,7 @@ interface DiagramToolbarProps {
   onBoundaryModeChange: (enabled: boolean) => void
   onOpenTemplates: () => void
   onOpenThreatAnalysis: () => void
+  onImportDiagram: (canvas: CanvasData) => void
 }
 
 interface ToolbarButtonConfig {
@@ -81,8 +84,31 @@ export const DiagramToolbar = memo(function DiagramToolbar({
   onBoundaryModeChange,
   onOpenTemplates,
   onOpenThreatAnalysis,
+  onImportDiagram,
 }: DiagramToolbarProps) {
   const { addNodes, getNodes } = useReactFlow()
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = '' // allow re-importing the same file name
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = parseAndValidateCanvas(String(reader.result ?? ''))
+      if (!result.ok) {
+        toast.error('Import failed', { description: result.errors.slice(0, 5).join('\n') })
+        return
+      }
+      if (result.warnings.length > 0) {
+        toast.warning('Imported with warnings', { description: result.warnings.slice(0, 5).join('\n') })
+      }
+      if (result.canvas) onImportDiagram(result.canvas)
+    }
+    reader.onerror = () => toast.error('Could not read file')
+    reader.readAsText(file)
+  }
 
   const handleAddNode = (type: DiagramNodeType) => {
     const nodes = getNodes()
@@ -221,6 +247,35 @@ export const DiagramToolbar = memo(function DiagramToolbar({
             </p>
           </TooltipContent>
         </Tooltip>
+
+        {/* Import DFD from JSON */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="h-4 w-4" />
+              <span className="hidden sm:inline">Import</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[220px]">
+            <p className="font-medium">Import DFD (JSON)</p>
+            <p className="text-xs text-muted-foreground">
+              Load a canvas_data JSON (e.g. AI-generated) into this diagram. Replaces the
+              current canvas; review and Save to generate threats.
+            </p>
+          </TooltipContent>
+        </Tooltip>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={handleImportFile}
+        />
 
         <Separator orientation="vertical" className="h-8 mx-2" />
 
