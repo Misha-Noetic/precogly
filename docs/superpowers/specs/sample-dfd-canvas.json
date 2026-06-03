@@ -1,0 +1,28 @@
+{
+  "nodes": [
+    { "id": "tz-internet", "type": "trustZone", "position": { "x": 0, "y": 0 },
+      "style": { "width": 300, "height": 400 },
+      "data": { "label": "Internet", "trustLevel": 0, "zoneColor": "#ef4444" } },
+    { "id": "tz-vpc", "type": "trustZone", "position": { "x": 400, "y": 0 },
+      "style": { "width": 360, "height": 400 },
+      "data": { "label": "AWS VPC", "trustLevel": 80, "zoneColor": "#22c55e" } },
+    { "id": "user", "type": "humanActor", "position": { "x": 40, "y": 90 },
+      "parentId": "tz-internet", "extent": "parent",
+      "data": { "label": "End User", "actorType": "user" } },
+    { "id": "api", "type": "process", "position": { "x": 40, "y": 80 },
+      "parentId": "tz-vpc", "extent": "parent",
+      "data": { "label": "API Server", "technology": "Django" } },
+    { "id": "db", "type": "datastore", "position": { "x": 40, "y": 240 },
+      "parentId": "tz-vpc", "extent": "parent",
+      "data": { "label": "User DB", "dataStoreType": "PostgreSQL" } }
+  ],
+  "edges": [
+    { "id": "e-login", "type": "dataFlow", "source": "user", "target": "api",
+      "data": { "label": "HTTPS login", "protocol": "https", "encrypted": true,
+                "authenticated": true, "hasSensitiveData": true } },
+    { "id": "e-query", "type": "dataFlow", "source": "api", "target": "db",
+      "data": { "label": "read/write user records", "protocol": "tcp", "hasSensitiveData": true } },
+    { "id": "tb-internet-vpc", "type": "trustBoundary", "source": "tz-internet", "target": "tz-vpc",
+      "data": { "label": "Internet to VPC", "authenticationMethods": ["token"] } }
+  ]
+}
