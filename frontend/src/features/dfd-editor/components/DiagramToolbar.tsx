@@ -1,6 +1,6 @@
 import { memo, useRef } from 'react'
 import { useReactFlow } from '@xyflow/react'
-import { User, Server, Cog, Database, Shield, Box, ArrowRight, LayoutTemplate, ShieldAlert, ShieldCheck, Upload } from 'lucide-react'
+import { User, Server, Cog, Database, Shield, Box, ArrowRight, LayoutTemplate, ShieldAlert, ShieldCheck, Upload, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -22,6 +22,7 @@ interface DiagramToolbarProps {
   onOpenTemplates: () => void
   onOpenThreatAnalysis: () => void
   onImportDiagram: (canvas: CanvasData) => void
+  onExportDiagram: () => void
 }
 
 interface ToolbarButtonConfig {
@@ -85,6 +86,7 @@ export const DiagramToolbar = memo(function DiagramToolbar({
   onOpenTemplates,
   onOpenThreatAnalysis,
   onImportDiagram,
+  onExportDiagram,
 }: DiagramToolbarProps) {
   const { addNodes, getNodes } = useReactFlow()
 
@@ -276,6 +278,28 @@ export const DiagramToolbar = memo(function DiagramToolbar({
           className="hidden"
           onChange={handleImportFile}
         />
+
+        {/* Export DFD to JSON */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={onExportDiagram}
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Export</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[220px]">
+            <p className="font-medium">Export DFD (JSON)</p>
+            <p className="text-xs text-muted-foreground">
+              Download this diagram as a clean canvas_data JSON — re-importable and a ready
+              example to feed an AI.
+            </p>
+          </TooltipContent>
+        </Tooltip>
 
         <Separator orientation="vertical" className="h-8 mx-2" />
 

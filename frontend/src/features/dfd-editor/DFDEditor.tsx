@@ -46,6 +46,7 @@ import { useParentRelationships } from './hooks/useParentRelationships'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useConnectionMode } from './hooks/useConnectionMode'
 import { useBoundaryMode } from './hooks/useBoundaryMode'
+import { toExportableCanvas, canvasFilename, downloadTextFile } from './lib/exportCanvas'
 import type { DiagramNode, DiagramEdge, DataFlowEdge, TrustBoundaryEdge, CanvasData } from './types'
 
 function DFDEditorContent() {
@@ -297,6 +298,14 @@ function DFDEditorContent() {
     [nodes.length, applyImportedCanvas]
   )
 
+  // Serialize the current canvas to a clean JSON file and download it.
+  const handleExportDiagram = useCallback(() => {
+    const clean = toExportableCanvas(nodes, edges)
+    if (nodes.length === 0) toast.info('Diagram is empty')
+    downloadTextFile(canvasFilename(diagram?.name), JSON.stringify(clean, null, 2))
+    toast.success(`Exported ${nodes.length} nodes and ${edges.length} connections.`)
+  }, [nodes, edges, diagram])
+
   // Keep selectedNode/selectedEdge in sync with actual node/edge data
   const currentSelectedNode = selectedNode
     ? (nodes.find((n) => n.id === selectedNode.id) as DiagramNode | undefined)
@@ -502,6 +511,7 @@ function DFDEditorContent() {
           navigate(`/threat-models/${threatModelId}`)
         }}
         onImportDiagram={handleImportDiagram}
+        onExportDiagram={handleExportDiagram}
       />
 
       <div className="flex flex-1 overflow-hidden">
