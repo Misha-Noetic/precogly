@@ -272,8 +272,9 @@ function DFDEditorContent() {
       setEdges(canvas.edges)
       setSelectedNode(null)
       setSelectedEdge(null)
-      // Frame the imported diagram after React Flow has the new nodes.
-      setTimeout(() => fitView({ padding: 0.2 }), 0)
+      // Frame the imported diagram once React Flow has committed and measured the
+      // new nodes; a double rAF lets the ResizeObserver settle before fitView.
+      requestAnimationFrame(() => requestAnimationFrame(() => fitView({ padding: 0.2 })))
       toast.success(
         `Imported ${canvas.nodes.length} nodes and ${canvas.edges.length} connections — review and Save to generate threats.`
       )
@@ -300,9 +301,14 @@ function DFDEditorContent() {
 
   // Serialize the current canvas to a clean JSON file and download it.
   const handleExportDiagram = useCallback(() => {
-    const clean = toExportableCanvas(nodes, edges)
-    if (nodes.length === 0) toast.info('Diagram is empty')
-    downloadTextFile(canvasFilename(diagram?.name), JSON.stringify(clean, null, 2))
+    const json = JSON.stringify(toExportableCanvas(nodes, edges), null, 2)
+    const filename = canvasFilename(diagram?.name)
+    if (nodes.length === 0) {
+      toast.info('Diagram is empty — exported an empty canvas.')
+      downloadTextFile(filename, json)
+      return
+    }
+    downloadTextFile(filename, json)
     toast.success(`Exported ${nodes.length} nodes and ${edges.length} connections.`)
   }, [nodes, edges, diagram])
 
