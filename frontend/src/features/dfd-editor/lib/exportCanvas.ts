@@ -26,10 +26,15 @@ const EDGE_DATA_OMIT = [
   'crossesZoneIds',
 ]
 
+// Keys that must never be copied via assignment: writing `out["__proto__"] = v`
+// invokes the prototype setter and reparents the target object. Always dropped.
+const DANGEROUS_KEYS = ['__proto__', 'constructor', 'prototype']
+
 function omitKeys(obj: Record<string, unknown>, keys: string[]): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(obj)) {
-    if (!keys.includes(k)) out[k] = v
+    if (DANGEROUS_KEYS.includes(k) || keys.includes(k)) continue
+    out[k] = v
   }
   return out
 }

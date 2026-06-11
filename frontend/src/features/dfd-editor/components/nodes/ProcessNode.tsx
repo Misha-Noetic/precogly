@@ -117,7 +117,7 @@ export const ProcessNode = memo(function ProcessNode({
               </div>
             )}
             {/* Data sensitivity badge at bottom-left */}
-            {data.dataSensitivity && (
+            {data.dataSensitivity && DATA_SENSITIVITY_CONFIG[data.dataSensitivity] && (
               <div
                 className="absolute bottom-1 left-3 text-xs px-1.5 py-0.5 rounded"
                 style={{
@@ -144,7 +144,7 @@ export const ProcessNode = memo(function ProcessNode({
                 )}
               </div>
             </div>
-            {data.dataSensitivity && (
+            {data.dataSensitivity && DATA_SENSITIVITY_CONFIG[data.dataSensitivity] && (
               <div
                 className="mt-2 text-xs px-1.5 py-0.5 rounded text-center"
                 style={{
