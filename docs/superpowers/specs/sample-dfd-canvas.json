@@ -7,13 +7,13 @@
       "style": { "width": 360, "height": 400 },
       "data": { "label": "AWS VPC", "trustLevel": 80, "zoneColor": "#22c55e" } },
     { "id": "user", "type": "humanActor", "position": { "x": 40, "y": 90 },
-      "parentId": "tz-internet", "extent": "parent",
+      "parentId": "tz-internet",
       "data": { "label": "End User", "actorType": "user" } },
     { "id": "api", "type": "process", "position": { "x": 40, "y": 80 },
-      "parentId": "tz-vpc", "extent": "parent",
+      "parentId": "tz-vpc",
       "data": { "label": "API Server", "technology": "Django" } },
     { "id": "db", "type": "datastore", "position": { "x": 40, "y": 240 },
-      "parentId": "tz-vpc", "extent": "parent",
+      "parentId": "tz-vpc",
       "data": { "label": "User DB", "dataStoreType": "PostgreSQL" } }
   ],
   "edges": [

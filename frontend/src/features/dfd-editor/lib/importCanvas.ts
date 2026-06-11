@@ -27,7 +27,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
  *
  * canvas_data has no backend JSON Schema, so this is the only gate before the
  * diagram is loaded into the editor. Returns a flat list of human-readable
- * errors (block import) and warnings (allow, but inform the user).
+ * errors (block import) and warnings (allow, but inform the user). Unknown/extra
+ * keys are intentionally allowed: the export denylist preserves non-stripped
+ * keys, so exported files must re-import without warnings.
  */
 export function parseAndValidateCanvas(text: string): CanvasValidationResult {
   const errors: string[] = []
@@ -88,7 +90,9 @@ export function parseAndValidateCanvas(text: string): CanvasValidationResult {
     }
   })
 
-  // Second pass: parentId references (all ids are known now).
+  // Second pass: parentId references (all ids are known now). precogly uses
+  // position-based containment and does not set React Flow's `extent` on
+  // contained nodes, so we only check that parentId resolves to a real node.
   ;(rawNodes as unknown[]).forEach((n) => {
     if (!isPlainObject(n)) return
     if ('parentId' in n && n.parentId != null) {
@@ -96,21 +100,24 @@ export function parseAndValidateCanvas(text: string): CanvasValidationResult {
         errors.push(
           `Node "${String(n.id)}": parentId "${String(n.parentId)}" does not match any node id.`
         )
-      } else if (!('extent' in n)) {
-        warnings.push(
-          `Node "${String(n.id)}": has parentId but no extent:"parent"; containment may not render.`
-        )
       }
     }
   })
 
+  const edgeIds = new Set<string>()
   ;(rawEdges as unknown[]).forEach((e, i) => {
     if (!isPlainObject(e)) {
       errors.push(`Edge ${i}: must be an object.`)
       return
     }
     const id = e.id
-    if (typeof id !== 'string' || id.length === 0) errors.push(`Edge ${i}: missing string "id".`)
+    if (typeof id !== 'string' || id.length === 0) {
+      errors.push(`Edge ${i}: missing string "id".`)
+    } else if (edgeIds.has(id)) {
+      errors.push(`Edge "${id}": duplicate id.`)
+    } else {
+      edgeIds.add(id)
+    }
     if (typeof e.type !== 'string' || !(EDGE_TYPES as readonly string[]).includes(e.type)) {
       errors.push(`Edge "${String(id)}": type must be one of ${EDGE_TYPES.join(', ')}.`)
     }

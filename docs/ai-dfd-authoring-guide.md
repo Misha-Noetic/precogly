@@ -9,9 +9,10 @@ Emit **only** a JSON object: `{ "nodes": [...], "edges": [...] }` (camelCase key
 
 **Node:** `id` (unique string), `type` ∈ `process | datastore | humanActor | systemActor
 | trustZone | systemScope`, `position` `{ x, y }`, `data` `{ "label": string, ... }`.
-For a node inside a zone/scope set `parentId` to the container's id and `extent: "parent"`
-(its `position` is then relative to the parent). Zones/scopes may set `style`
-`{ "width", "height" }`.
+For a node inside a zone/scope set `parentId` to the container's id (its `position` is then
+relative to the parent). Do NOT set `extent` — precogly manages containment by position and
+keeps nodes freely draggable. List parent nodes before their children. Zones/scopes may set
+`style` `{ "width", "height" }`.
 
 **Edge:** `id`, `type` ∈ `dataFlow | trustBoundary`, `source`, `target` (node ids).
 - `dataFlow.data`: `label`, `protocol`, `encrypted`, `authenticated`, `hasSensitiveData`,
